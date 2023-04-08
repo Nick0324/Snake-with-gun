@@ -1,4 +1,5 @@
 import pygame
+from pygame import font
 from pygame.locals import *
 import time
 import random
@@ -22,13 +23,37 @@ class Game:
         self.snake.move()
         self.apple.draw()
 
+        #colliding with apple
         if self.is_colliding(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
             self.snake.increase_length()
-
             self.apple.move()
+
+        #colliding with segment
+        for i in range(3, self.snake.length):
+            if self.is_colliding(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
+                raise "Game over!"
+
+        # draw the apple in a position different to the snake
+        #for i in range(0, self.snake.length):
+            #while self.snake.x[i] == self.apple.x and self.snake.y[i] == self.apple.y:
+                #self.apple.move()
 
     def display_score(self):
         pygame.display.set_caption('Snake | Score: ' + str(self.snake.length - 1))
+
+    def show_game_over(self):
+        self.surface.fill((0,255,0))
+        font = pygame.font.SysFont('arial', 30)
+        line1 = font.render(f"Game is over! Your score is {self.snake.length - 1}", True, (255,255,255))
+        self.surface.blit(line1, (200,300))
+        line2 = font.render(f"Press enter to play again. Press escape to exit.", True, (255,255,255))
+        self.surface.blit(line2, (200, 350))
+        pygame.display.flip()
+
+    def reset(self):
+        self.snake = Snake(self.surface)
+        self.snake.length = 1
+        self.apple = Apple(self.surface)
 
     def is_colliding(self, x1, y1, x2, y2):
         if x2 <= x1 < x2 + SIZE:
@@ -38,31 +63,42 @@ class Game:
 
     def run(self):
         running = True
+        pause = False
         while running:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     running = False
                 if event.type == KEYDOWN:
+                    if event.key == K_RETURN:
+                        pause = False
                     if event.key == K_ESCAPE:
                         running = False
-                    if event.key == K_UP:
-                        self.snake.set_direction("UP")
-                    if event.key == K_DOWN:
-                        self.snake.set_direction("DOWN")
-                    if event.key == K_LEFT:
-                        self.snake.set_direction("LEFT")
-                    if event.key == K_RIGHT:
-                        self.snake.set_direction("RIGHT")
+
+                    if not pause:
+                        if event.key == K_UP:
+                            self.snake.set_direction("UP")
+                        if event.key == K_DOWN:
+                            self.snake.set_direction("DOWN")
+                        if event.key == K_LEFT:
+                            self.snake.set_direction("LEFT")
+                        if event.key == K_RIGHT:
+                            self.snake.set_direction("RIGHT")
 
             self.display_score()
 
-            self.draw_objects()
+            try:
+                if not pause:
+                    self.draw_objects()
+            except Exception as e:
+                self.show_game_over()
+                pause = True
+                self.reset()
             time.sleep(0.3)
 
 
 class Snake:
     def __init__(self, screen):
-        self.length = 1
+        self.length = 10
         self.screen = screen
         self.block = pygame.image.load("resources/block.jpg").convert()
         self.x = [SIZE] * self.length
@@ -101,13 +137,17 @@ class Snake:
 
     def set_direction(self, direction):
         if direction == "UP":
-            self.facing_direction = "UP"
+            if self.facing_direction != "DOWN" or self.length == 1:
+                self.facing_direction = "UP"
         if direction == "DOWN":
-            self.facing_direction = "DOWN"
+            if self.facing_direction != "UP" or self.length == 1:
+                self.facing_direction = "DOWN"
         if direction == "LEFT":
-            self.facing_direction = "LEFT"
+            if self.facing_direction != "RIGHT" or self.length == 1:
+                self.facing_direction = "LEFT"
         if direction == "RIGHT":
-            self.facing_direction = "RIGHT"
+            if self.facing_direction != "LEFT" or self.length == 1:
+                self.facing_direction = "RIGHT"
 
 
 class Apple:
