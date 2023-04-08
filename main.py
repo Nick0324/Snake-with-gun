@@ -11,7 +11,7 @@ class Game:
     def __init__(self):
         pygame.init()
         self.surface = pygame.display.set_mode((800, 800))
-        self.surface.fill((0, 255, 0))
+        self.draw_background()
 
         self.snake = Snake(self.surface)
         self.snake.draw()
@@ -20,33 +20,36 @@ class Game:
         self.apple.draw()
 
     def draw_objects(self):
+        self.draw_background()
         self.snake.move()
         self.apple.draw()
+        self.display_score()
+        pygame.display.flip()
 
-        #colliding with apple
+        # colliding with apple
         if self.is_colliding(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
             self.snake.increase_length()
             self.apple.move()
 
-        #colliding with segment
+        # colliding with segment
         for i in range(3, self.snake.length):
             if self.is_colliding(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
                 raise "Game over!"
 
         # draw the apple in a position different to the snake
-        #for i in range(0, self.snake.length):
-            #while self.snake.x[i] == self.apple.x and self.snake.y[i] == self.apple.y:
-                #self.apple.move()
+        # for i in range(0, self.snake.length):
+        # while self.snake.x[i] == self.apple.x and self.snake.y[i] == self.apple.y:
+        # self.apple.move()
 
     def display_score(self):
         pygame.display.set_caption('Snake | Score: ' + str(self.snake.length - 1))
 
     def show_game_over(self):
-        self.surface.fill((0,255,0))
+        self.draw_background()
         font = pygame.font.SysFont('arial', 30)
-        line1 = font.render(f"Game is over! Your score is {self.snake.length - 1}", True, (255,255,255))
-        self.surface.blit(line1, (200,300))
-        line2 = font.render(f"Press enter to play again. Press escape to exit.", True, (255,255,255))
+        line1 = font.render(f"Game is over! Your score is {self.snake.length - 1}", True, (255, 255, 255))
+        self.surface.blit(line1, (200, 300))
+        line2 = font.render(f"Press enter to play again. Press escape to exit.", True, (255, 255, 255))
         self.surface.blit(line2, (200, 350))
         pygame.display.flip()
 
@@ -54,6 +57,10 @@ class Game:
         self.snake = Snake(self.surface)
         self.snake.length = 1
         self.apple = Apple(self.surface)
+
+    def draw_background(self):
+        bg = pygame.image.load("resources/background.jpg").convert()
+        self.surface.blit(bg, (0, 0))
 
     def is_colliding(self, x1, y1, x2, y2):
         if x2 <= x1 < x2 + SIZE:
@@ -84,8 +91,6 @@ class Game:
                         if event.key == K_RIGHT:
                             self.snake.set_direction("RIGHT")
 
-            self.display_score()
-
             try:
                 if not pause:
                     self.draw_objects()
@@ -98,7 +103,7 @@ class Game:
 
 class Snake:
     def __init__(self, screen):
-        self.length = 10
+        self.length = 1
         self.screen = screen
         self.block = pygame.image.load("resources/block.jpg").convert()
         self.x = [SIZE] * self.length
@@ -106,8 +111,6 @@ class Snake:
         self.facing_direction = "RIGHT"
 
     def draw(self):
-        self.screen.fill((0, 255, 0))
-
         for i in range(self.length):
             self.screen.blit(self.block, (self.x[i], self.y[i]))
         pygame.display.flip()
@@ -162,7 +165,7 @@ class Apple:
         pygame.display.flip()
 
     def move(self):
-        self.x, self.y = random.randint(0, 20) * SIZE, random.randint(0, 20) * SIZE
+        self.x, self.y = random.randint(0, 19) * SIZE, random.randint(0, 19) * SIZE
 
 
 if __name__ == '__main__':
