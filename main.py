@@ -11,6 +11,7 @@ class Game:
     def __init__(self):
         pygame.init()
         self.surface = pygame.display.set_mode((800, 800))
+        self.backgroundX = 0
         self.draw_background()
 
         self.snake = Snake(self.surface)
@@ -59,8 +60,13 @@ class Game:
         self.apple = Apple(self.surface)
 
     def draw_background(self):
-        bg = pygame.image.load("resources/background.jpg").convert()
-        self.surface.blit(bg, (0, 0))
+        bg1 = pygame.image.load("resources/background.jpg").convert()
+        bg2 = pygame.image.load("resources/background.jpg").convert()
+        self.surface.blit(bg1, (self.backgroundX, 0))
+        self.surface.blit(bg2, (self.backgroundX - 800, 0))
+        self.backgroundX += 3
+        if self.backgroundX == 800:
+            self.backgroundX = 0
 
     def is_colliding(self, x1, y1, x2, y2):
         if x2 <= x1 < x2 + SIZE:
