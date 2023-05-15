@@ -1,3 +1,5 @@
+import json
+import os
 import random
 import time
 
@@ -5,7 +7,7 @@ import pygame
 from pygame.locals import *
 
 SIZE = 40
-
+SCORES_FILE = 'scores.json'
 
 class Game:
     def __init__(self):
@@ -99,6 +101,23 @@ class Game:
     def display_score(self):
         pygame.display.set_caption('Snake | Score: ' + str(self.snake.length - 1))
 
+    def write_scores(self, scores):
+        with open('scores.json', 'w') as file:
+            json.dump(scores, file)
+
+    def read_scores(self):
+        if not os.path.isfile(SCORES_FILE) or os.path.getsize(SCORES_FILE) == 0:
+            return []
+        with open(SCORES_FILE, 'r') as file:
+                return json.load(file)
+
+    def add_score(self, score):
+        scores = self.read_scores()
+        scores.append({'score': score})
+        scores.sort(key=lambda x: x['score'], reverse=True)  # Sort scores in descending order
+        scores = scores[:10]  # Keep only the top 10 scores
+        self.write_scores(scores)
+
     def show_game_over(self):
         self.draw_background()
         Font = pygame.font.SysFont('arial', 30)
@@ -107,6 +126,7 @@ class Game:
         line2 = Font.render(f"Press enter to play again. Press escape to exit.", True, (255, 255, 255))
         self.surface.blit(line2, (200, 350))
         pygame.display.flip()
+        self.add_score(self.snake.length - 1)
 
     def reset(self):
         self.snake = Snake(self.surface)
