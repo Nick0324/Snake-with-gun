@@ -1,8 +1,8 @@
-import pygame
-from pygame import font
-from pygame.locals import *
-import time
 import random
+import time
+
+import pygame
+from pygame.locals import *
 
 SIZE = 40
 
@@ -17,8 +17,21 @@ class Game:
         self.snake = Snake(self.surface)
         self.snake.draw()
 
+        #generate which fruit to spawn
+        self.fruitID = 0
         self.apple = Apple(self.surface)
+        self.generate_fruit()
         self.apple.draw()
+
+    def generate_fruit(self):
+        self.fruitID = random.randint(0, 2)
+        match self.fruitID:
+            case 0:
+                self.apple = Pepper(self.surface)
+            case 1:
+                self.apple = Pepper(self.surface)
+            case 2:
+                self.apple = Pepper(self.surface)
 
     def draw_objects(self):
         self.draw_background()
@@ -30,6 +43,7 @@ class Game:
         # colliding with apple
         if self.is_colliding(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
             self.snake.increase_length()
+            self.generate_fruit()
             self.apple.move()
 
         # colliding with segment
@@ -47,10 +61,10 @@ class Game:
 
     def show_game_over(self):
         self.draw_background()
-        font = pygame.font.SysFont('arial', 30)
-        line1 = font.render(f"Game is over! Your score is {self.snake.length - 1}", True, (255, 255, 255))
+        Font = pygame.font.SysFont('arial', 30)
+        line1 = Font.render(f"Game is over! Your score is {self.snake.length - 1}", True, (255, 255, 255))
         self.surface.blit(line1, (200, 300))
-        line2 = font.render(f"Press enter to play again. Press escape to exit.", True, (255, 255, 255))
+        line2 = Font.render(f"Press enter to play again. Press escape to exit.", True, (255, 255, 255))
         self.surface.blit(line2, (200, 350))
         pygame.display.flip()
 
@@ -173,6 +187,53 @@ class Apple:
     def move(self):
         self.x, self.y = random.randint(0, 19) * SIZE, random.randint(0, 19) * SIZE
 
+
+class Coconut(Apple):
+
+    hasShell = True
+
+    def __init__(self, screen):
+        self.sprite = pygame.image.load("resources/coconut.jpg").convert()
+        self.screen = screen
+        self.x = 400
+        self.y = 400
+
+    def remove_shell(self):
+        self.sprite = pygame.image.load("resources/coconut_broken.jpg").convert()
+        self.hasShell = False
+
+class Pepper(Apple):
+    def __init__(self, screen):
+        self.sprite = pygame.image.load("resources/pepper.jpg").convert()
+        self.screen = screen
+        self.x = 400
+        self.y = 400
+        self.direction = random.randint(0, 3)
+        self.projectile = pygame.image.load("resources/coconut.jpg").convert()
+        self.projectilex = self.x
+        self.projectiley = self.y
+
+    def draw(self):
+        match self.direction:
+            case 0:
+                self.projectiley -= SIZE
+            case 1:
+                self.projectilex += SIZE
+            case 2:
+                self.projectiley += SIZE
+            case 3:
+                self.projectilex -= SIZE
+        if self.projectilex > 800 or self.projectilex < 0 or self.projectiley > 800 or self.projectiley < 0:
+            self.projectilex = self.x
+            self.projectiley = self.y
+        self.screen.blit(self.sprite, (self.x, self.y))
+        self.screen.blit(self.projectile, (self.projectilex, self.projectiley))
+        pygame.display.flip()
+
+    def move(self):
+        self.x, self.y = random.randint(0, 19) * SIZE, random.randint(0, 19) * SIZE
+        self.projectilex = self.x
+        self.projectiley = self.y
 
 if __name__ == '__main__':
     game = Game()
