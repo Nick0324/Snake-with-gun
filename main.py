@@ -17,39 +17,76 @@ class Game:
         self.snake = Snake(self.surface)
         self.snake.draw()
 
-        #generate which fruit to spawn
+        # generate which fruit to spawn
         self.fruitID = 0
         self.apple = Apple(self.surface)
+        self.coconut = Coconut(self.surface)
+        self.pepper = Pepper(self.surface)
         self.generate_fruit()
-        self.apple.draw()
 
     def generate_fruit(self):
         self.fruitID = random.randint(0, 2)
-        match self.fruitID:
-            case 0:
-                self.apple = Apple(self.surface)
-            case 1:
-                self.apple = Coconut(self.surface)
-            case 2:
-                self.apple = Pepper(self.surface)
 
     def draw_objects(self):
         self.draw_background()
         self.snake.move()
-        self.apple.draw()
         self.display_score()
         pygame.display.flip()
 
-        # colliding with apple
-        if self.is_colliding(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
-            self.snake.increase_length()
-            self.generate_fruit()
-            self.apple.move()
+        match self.fruitID:
+            case 0:
+                self.apple.draw()
+            case 1:
+                self.coconut.draw()
+            case 2:
+                self.pepper.draw()
+
+        match self.fruitID:
+            # colliding with apple
+            case 0:
+                if self.is_colliding(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
+                    self.snake.increase_length(1)
+                    self.generate_fruit()
+                    self.apple.move()
+                    self.coconut.x = self.apple.x
+                    self.coconut.y = self.apple.y
+                    self.pepper.x = self.apple.x
+                    self.pepper.y = self.apple.y
+                    self.pepper.projectilex = self.apple.x
+                    self.pepper.projectiley = self.apple.y
+            # colliding with coconut
+            case 1:
+                if self.is_colliding(self.snake.x[0], self.snake.y[0], self.apple.x,
+                                     self.apple.y) and self.coconut.hasShell:
+                    self.snake.increase_length(2)
+                    self.generate_fruit()
+                    self.coconut.move()
+                    self.apple.x = self.coconut.x
+                    self.apple.y = self.coconut.y
+                    self.pepper.x = self.coconut.x
+                    self.pepper.y = self.coconut.y
+                    self.pepper.projectilex = self.coconut.x
+                    self.pepper.projectiley = self.coconut.y
+
+            # colliding with pepper
+            case 2:
+                if self.is_colliding(self.snake.x[0], self.snake.y[0], self.pepper.x, self.pepper.y):
+                    self.snake.increase_length(3)
+                    self.generate_fruit()
+                    self.pepper.move()
+                    self.apple.x = self.pepper.x
+                    self.apple.y = self.pepper.y
+                    self.coconut.x = self.pepper.x
+                    self.coconut.y = self.pepper.y
 
         # colliding with segment
         for i in range(3, self.snake.length):
             if self.is_colliding(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
                 raise "Game over!"
+
+        # colliding with pepper projectile
+        if self.fruitID == 2 and self.is_colliding(self.snake.x[0], self.snake.y[0], self.pepper.projectilex, self.pepper.projectiley):
+            raise "Game over!"
 
         # draw the apple in a position different to the snake
         # for i in range(0, self.snake.length):
@@ -135,10 +172,11 @@ class Snake:
             self.screen.blit(self.block, (self.x[i], self.y[i]))
         pygame.display.flip()
 
-    def increase_length(self):
-        self.length += 1
-        self.x.append(-1)
-        self.y.append(-1)
+    def increase_length(self, amount):
+        self.length += amount
+        for i in range(amount):
+            self.x.append(-1)
+            self.y.append(-1)
 
     def check_out_of_bounds(self):
         if self.x[0] < 0:
@@ -201,7 +239,6 @@ class Apple:
 
 
 class Coconut(Apple):
-
     hasShell = True
 
     def __init__(self, screen):
@@ -213,6 +250,7 @@ class Coconut(Apple):
     def remove_shell(self):
         self.sprite = pygame.image.load("resources/coconut_broken.jpg").convert()
         self.hasShell = False
+
 
 class Pepper(Apple):
     def __init__(self, screen):
@@ -244,7 +282,7 @@ class Pepper(Apple):
                 case 2:
                     self.projectiley = self.y + SIZE
                 case 3:
-                    self.projectiley = self.y + SIZE
+                    self.projectilex = self.x - SIZE
         self.screen.blit(self.sprite, (self.x, self.y))
         self.screen.blit(self.projectile, (self.projectilex, self.projectiley))
         pygame.display.flip()
@@ -253,6 +291,8 @@ class Pepper(Apple):
         self.x, self.y = random.randint(0, 19) * SIZE, random.randint(0, 19) * SIZE
         self.projectilex = self.x
         self.projectiley = self.y
+        self.direction = random.randint(0, 3)
+
 
 if __name__ == '__main__':
     game = Game()
