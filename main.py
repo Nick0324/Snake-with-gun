@@ -57,7 +57,7 @@ class Game:
             # colliding with coconut
             case 1:
                 if self.is_colliding(self.snake.x[0], self.snake.y[0], self.apple.x,
-                                     self.apple.y) and self.coconut.hasShell:
+                                     self.apple.y) and not self.coconut.hasShell:
                     self.snake.increase_length(2)
                     self.generate_fruit()
                     self.coconut.move()
@@ -67,6 +67,9 @@ class Game:
                     self.pepper.y = self.coconut.y
                     self.pepper.projectilex = self.coconut.x
                     self.pepper.projectiley = self.coconut.y
+                elif self.is_colliding(self.snake.x[0], self.snake.y[0], self.apple.x,
+                                     self.apple.y) and self.coconut.hasShell:
+                    raise "Game over!"
 
             # colliding with pepper
             case 2:
@@ -125,6 +128,34 @@ class Game:
                 return True
         return False
 
+    def is_breaking_shell(self):
+        if self.snake.facing_direction == "RIGHT":
+            x = self.snake.x[0] + SIZE
+            while x <= 800:
+                if self.fruitID == 1 and self.coconut.x == x:
+                    return True
+                x += SIZE
+        if self.snake.facing_direction == "LEFT":
+            x = self.snake.x[0] - SIZE
+            while x >= 0:
+                if self.fruitID == 1 and self.coconut.x == x:
+                    return True
+                x -= SIZE
+        if self.snake.facing_direction == "UP":
+            y = self.snake.y[0] - SIZE
+            while y >= 0:
+                if self.fruitID == 1 and self.coconut.y == y:
+                    return True
+                y -= SIZE
+        if self.snake.facing_direction == "DOWN":
+            y = self.snake.y[0] + SIZE
+            while y <= 800:
+                if self.fruitID == 1 and self.coconut.y == y:
+                    return True
+                y += SIZE
+
+        return False
+
     def run(self):
         running = True
         pause = False
@@ -147,6 +178,11 @@ class Game:
                             self.snake.set_direction("LEFT")
                         if event.key == K_RIGHT:
                             self.snake.set_direction("RIGHT")
+                        if event.key == K_SPACE:
+                            self.snake.shoot()
+                            if self.is_breaking_shell():
+                                self.coconut.remove_shell()
+
 
             try:
                 if not pause:
@@ -166,6 +202,8 @@ class Snake:
         self.x = [SIZE] * self.length
         self.y = [SIZE] * self.length
         self.facing_direction = "RIGHT"
+        self.projectile_sprite_horizontal = pygame.image.load("resources/horizontal_projectile.jpg").convert()
+        self.projectile_sprite_vertical = pygame.image.load("resources/vertical_projectile.jpg").convert()
 
     def draw(self):
         for i in range(self.length):
@@ -223,6 +261,33 @@ class Snake:
                 self.facing_direction = "RIGHT"
 
 
+    def shoot(self):
+        match self.facing_direction:
+            case "RIGHT":
+                x = self.x[0] + SIZE
+                while x <= 800:
+                    self.screen.blit(self.projectile_sprite_horizontal, (x, self.y[0]))
+                    x += 40
+            case "LEFT":
+                x = self.x[0] - SIZE
+                while x >= 0:
+                    self.screen.blit(self.projectile_sprite_horizontal, (x, self.y[0]))
+                    x -= 40
+            case "UP":
+                y = self.y[0] - SIZE
+                while y >= 0:
+                    self.screen.blit(self.projectile_sprite_vertical, (self.x[0], y))
+                    y -= 40
+
+            case "DOWN":
+                y = self.y[0] + SIZE
+                while y <= 800:
+                    self.screen.blit(self.projectile_sprite_vertical, (self.x[0], y))
+                    y += 40
+
+        pygame.display.flip()
+
+
 class Apple:
     def __init__(self, screen):
         self.sprite = pygame.image.load("resources/apple.jpg").convert()
@@ -251,6 +316,10 @@ class Coconut(Apple):
         self.sprite = pygame.image.load("resources/coconut_broken.jpg").convert()
         self.hasShell = False
 
+    def move(self):
+        self.x, self.y = random.randint(0, 19) * SIZE, random.randint(0, 19) * SIZE
+        self.hasShell = True
+        self.sprite = pygame.image.load("resources/coconut.jpg").convert()
 
 class Pepper(Apple):
     def __init__(self, screen):
