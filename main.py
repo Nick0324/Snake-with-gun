@@ -27,9 +27,9 @@ class Game:
         self.fruitID = random.randint(0, 2)
         match self.fruitID:
             case 0:
-                self.apple = Pepper(self.surface)
+                self.apple = Apple(self.surface)
             case 1:
-                self.apple = Pepper(self.surface)
+                self.apple = Coconut(self.surface)
             case 2:
                 self.apple = Pepper(self.surface)
 
@@ -140,7 +140,19 @@ class Snake:
         self.x.append(-1)
         self.y.append(-1)
 
+    def check_out_of_bounds(self):
+        if self.x[0] < 0:
+            self.x[0] = 800
+        if self.x[0] > 800:
+            self.x[0] = 0
+        if self.y[0] < 0:
+            self.y[0] = 800
+        if self.y[0] > 800:
+            self.y[0] = 0
+
     def move(self):
+        self.check_out_of_bounds()
+
         for i in range(self.length - 1, 0, -1):
             self.x[i] = self.x[i - 1]
             self.y[i] = self.y[i - 1]
@@ -209,7 +221,7 @@ class Pepper(Apple):
         self.x = 400
         self.y = 400
         self.direction = random.randint(0, 3)
-        self.projectile = pygame.image.load("resources/coconut.jpg").convert()
+        self.projectile = pygame.image.load("resources/pepper_projectile.jpg").convert()
         self.projectilex = self.x
         self.projectiley = self.y
 
@@ -224,8 +236,15 @@ class Pepper(Apple):
             case 3:
                 self.projectilex -= SIZE
         if self.projectilex > 800 or self.projectilex < 0 or self.projectiley > 800 or self.projectiley < 0:
-            self.projectilex = self.x
-            self.projectiley = self.y
+            match self.direction:
+                case 0:
+                    self.projectiley = self.y - SIZE
+                case 1:
+                    self.projectilex = self.x + SIZE
+                case 2:
+                    self.projectiley = self.y + SIZE
+                case 3:
+                    self.projectiley = self.y + SIZE
         self.screen.blit(self.sprite, (self.x, self.y))
         self.screen.blit(self.projectile, (self.projectilex, self.projectiley))
         pygame.display.flip()
